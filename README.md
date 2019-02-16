@@ -8,5 +8,7 @@ Program for convert any plain text to xml. For example hjt2xml, cs2xml, js2xml, 
 4. First file line - what do first with first lines of file.
 5. Test new Node start - condition, when new node for xml.
 6. Node.caption|id|dt|ico|level - what level, attributes, read all data until next node.
-7. Text2Line - button for convert formatted javascript to 1 line
+7. Text2Line - button for convert formatted javascript to 1 line.
+8. shortLine - long text will be saved as text files.
+9. toWrap - long line will be splitted.
 See examples.
