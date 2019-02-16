@@ -1,0 +1,261 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<!-- saved from url=(1234)treegraph.sf.net -->
+<html><head><title>txt2xml</title>
+<script src="common.js"></script>
+<script src="pocketie.js"></script></head>
+<script language="javascript">
+<!--
+sUrl = "treegraph.by.ru";//saved from
+sCharset = "windows-1251";//charset
+
+var fso,f,fxml,fframe,smore,snomore;
+ForReading = 1;
+flag1line = 64;
+flagWrap = 80;
+flagWrapMin = 50;
+var LastLevel = 1;
+var idcount = 0;
+writeLevel = 0;
+var arF ="";
+var arN = "";
+var arL = 0;
+
+node = {};
+node.id = 0;
+node.level = 1;
+node.dt = "";
+node.caption = "";
+node.article = "";
+node.ico = "";
+
+sTest = "";
+iTest = 0;
+
+//file index
+function fileIndex(fframe,fname){
+fframe.WriteLine('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN">');
+fframe.WriteLine('<!'+'-- saved from url=(1234)'+sUrl+' --'+'>');
+fframe.WriteLine('<HTML><HEAD><TITLE>'+fname+'</TITLE>');
+fframe.WriteLine('<meta http-equiv="Content-Type" content="text/html;charset='+sCharset+'">');
+fframe.WriteLine('<meta content="Aragost.WebTreeGraph.txt2xml" name="GENERATOR"></HEAD>');
+fframe.WriteLine('<FRAMESET cols="20%,*"><FRAME name="tree" src="'+fname+'.xml" MARGINWIDTH="0px">');
+fframe.WriteLine('<FRAME name="article" scrolling="yes" src="1.txt"><NOFRAMES>');
+fframe.WriteLine("<body>This page uses frames, but your browser doesn't support them.</body>");
+fframe.WriteLine('</NOFRAMES></FRAMESET></HTML> ');
+fframe.Close();
+}
+
+function ReadStart(f){
+line =  f.ReadLine();
+if (line.indexOf(sTest) == iTest){}
+  else {
+  alert('Wrong file!');
+  return(0);
+  };
+}
+
+function Word(ch) {
+return (((ch >= "A") && (ch <= "Z")) || ((ch >= "a") && (ch <= "z"))	|| ((ch >= "А") && (ch <= "Я")) || ((ch >= "а") && (ch <= "я")))
+}
+
+function Word9(c) {
+return (((c >= "A") && (c <= "Z")) || ((c >= "a") && (c <= "z"))	|| ((c >= "А") && (c <= "Я")) || ((c >= "а") && (c <= "я"))	|| ((c >= "0") && (c <= "9")))
+}
+
+function Words9Caps(str) {
+i = 0;
+while ((i<str.length) && (str.charAt(i) == str.charAt(i).toUpperCase())) i++;
+return (i == str.length)
+}
+
+//------------------------------Read1Node_ChangeLevel(f){
+function Read1Node_ChangeLevel(f){
+eval(firstLines.value);
+ReadNode_ChangeLevel(f);
+}
+
+//------------------------------CreateWrite(f){
+function CreateWrite(f){
+//xml human format
+st = '';
+for (i = 0; i < (node.level-arL); i++) {st = st + ' ';}
+if (!testMode) ta.value += ""+node.id +"-"+ node.caption + '\n';
+//text in xml attr?
+if (node.article == '') {
+	smore = st+'<n b="'+node.caption+'">';
+	snomore = st+'<n b="'+node.caption+'">';
+} else {
+	if ((node.article.length<flag1line)&&(node.dt=='txt')&&(node.article.indexOf("'")==-1)&&(node.article.indexOf("&#39;")==-1)) {
+		arr = XmlFormat(node.article).split('\r\n');
+		node.article=arr[0];
+		for (iArr=1;iArr<arr.length-1;iArr++){node.article +=('\\'+'n'+arr[iArr])};
+		if (arr.length>1) node.article +=arr[arr.length-1];
+		smore = st+'<n b="'+node.caption+'" s="'+node.article+'">';
+		snomore = st+'<n b="'+node.caption+'" s="'+node.article+'">';
+	} else {
+		sext='.txt';
+		if (node.dt=='rtf') sext='.rtf';
+		if (!testMode) {
+			var farticle = fso.CreateTextFile(name+'\\'+node.id+sext, true);
+			farticle.Write(node.article);
+			farticle.Close();}
+		smore = st+'<n b="'+node.caption+'" h="'+node.id+sext+'">';
+		snomore = st+'<n b="'+node.caption+'" h="'+node.id+sext+'">';}
+}
+LastLevel = node.level;
+}
+
+//------------------------------ReadNode_ChangeLevel(f){
+function ReadNode_ChangeLevel(f){
+//id
+node.article = "";
+if (idcount!=-1){node.id=idcount++}
+eval(NodeCaption.value);
+//eval(NodeLevel.value);
+//text2xmltext
+node.caption = XmlFormat(node.caption);
+while ((!f.AtEndOfStream) && (IsEmpty(s))) s = f.ReadLine();
+//do read article
+while ((!f.AtEndOfStream) && (!eval(testNodeCaption.value))) {
+	line = WrapLine(s,flagWrap,flagWrapMin);
+	node.article = node.article + line + '\x0D\x0A';
+	s =  f.ReadLine();
+	if ((s !="")&&(IsEmpty(s))) s="";}
+//last line in file: article or caption?
+if ((f.AtEndOfStream) && (!eval(testNodeCaption.value))) {
+	line = WrapLine(s,flagWrap,flagWrapMin);
+	node.article = node.article + line;}
+while ((node.article.length>1)&&(node.article.substr(node.article.length-2)=='\x0D\x0A')) node.article=node.article.substr(0,node.article.length-2);
+}
+
+//------------------------------WriteNode(){
+function WriteNode(){
+if (node.level>=writeLevel) {
+	if (LastLevel < node.level ) 
+		arF = arF + smore+ '\x0D\x0A';//br
+	else 
+		arF = arF + snomore + '</n>'+ '\x0D\x0A';}
+//if sub nodes ends
+while (node.level < LastLevel) {
+	arF += '</n>'+ '\x0D\x0A';//br
+	LastLevel = LastLevel-1;
+}
+}
+
+function txt2xml(){
+testMode = false;
+if (hpc.checked==false) {fso = new ActiveXObject("Scripting.FileSystemObject")}
+else {
+  axgate.PassCode = "SetYoursHere";
+  axgate.Profile = "FullAccess";
+  var creator = axgate.CreateObject();
+  var sf = creator.CreateObject("newObjects.utilctls.SFMain");
+  fso={};fso=fso2hpc(fso,sf)}
+name = filehjt.value;
+if (name.length<2) {return(0)}
+fname = name.substr(name.lastIndexOf('\\')+1);
+fname = fname.substr(0,fname.lastIndexOf('.'));
+document.all.www.href=name.substr(0,name.lastIndexOf('\\')+1)+fname+'\\index.htm';
+name = name.substr(0,name.lastIndexOf('.'));
+if (!fso.FolderExists(name)) {fso.CreateFolder(name);}
+fframe = fso.CreateTextFile(name+'\\'+'index.htm', true);
+fileIndex(fframe,fname);
+if (fso.FileExists(name.substr(0,name.lastIndexOf('\\')+1)+'view.xsl')) {
+	f = fso.GetFile(name.substr(0,name.lastIndexOf('\\')+1)+'view.xsl');
+	f.Copy(name+'\\'+'view.xsl');
+}
+if (fso.FileExists(name.substr(0,name.lastIndexOf('\\')+1)+'view.js')) {
+	f = fso.GetFile(name.substr(0,name.lastIndexOf('\\')+1)+'view.js');
+	f.Copy(name+'\\'+'view.js');
+}
+if (fso.FileExists(name.substr(0,name.lastIndexOf('\\')+1)+'view.css')) {
+	f = fso.GetFile(name.substr(0,name.lastIndexOf('\\')+1)+'view.css');
+	f.Copy(name+'\\'+'view.css');
+}
+
+arF = "";
+arL = 0;
+arN = name.substr(name.lastIndexOf('\\')+1);
+ta.value = "";
+idcount = Number(idStart.value);
+flag1line = Number(shortLine.value);
+flagWrap = Number(wrapLine.value);
+flagWrapMin = Number(wrapMin.value);
+f = fso.OpenTextFile(filehjt.value, ForReading,false);
+//ReadStart(f);
+Read1Node_ChangeLevel(f);
+CreateWrite(f);
+//пока не конец файла
+while (!f.AtEndOfStream) {
+	ReadNode_ChangeLevel(f);
+	WriteNode();
+	CreateWrite(f);
+} //while (!f.AtEndOfStream)
+//todo last line in file is caption
+fxml = fso.CreateTextFile(name+'\\'+arN+'.xml',true);
+fileXmlStart(fxml);
+fxml.Write(arF);
+fileXmlClose(fxml,snomore,LastLevel-arL-1);
+f.Close();
+ta.value = ta.value +' '+node.id+'-ok!';
+}
+
+function Text2Line(str){
+  arr = str.split("\r\n");str="";
+  for (iArr=0;iArr<arr.length;iArr++){str +=(arr[iArr]+' ')};
+  taTest.value = str;
+}
+
+function Test(){
+arF = "";
+arL = 0;
+taTest.value = "";
+idcount = idStart.value;
+flag1line = shortLine.value;
+testLine = 0;
+ta.value += "\r\n";
+f={};
+f = ta.value.split("\r\n");
+f.AtEndOfStream = false;//if !(testLine<f.length) {
+f.ReadLine = function(){f.AtEndOfStream = !((testLine+1)<f.length);return f[testLine++]};
+testMode = true;
+node.id=0;
+
+Read1Node_ChangeLevel(f);
+CreateWrite(f);
+//пока не конец файла
+while (!f.AtEndOfStream) {
+	ReadNode_ChangeLevel(f);
+	WriteNode();
+	CreateWrite(f);
+} //while (!f.AtEndOfStream)
+taTest.value = arF;
+n = LastLevel-arL-1;
+if (snomore !== "") taTest.value += snomore + '</n>';
+while (n>0) {
+    taTest.value += '</n>';
+	n--;}
+testMode = false;
+}
+
+--></script>
+<body>
+<OBJECT ID="axgate" CLASSID="clsid:03797ADA-8CCF-4533-B623-2C5DE06B29C7"></OBJECT>
+Choose file : <input type="file" id="filehjt" size="50"> Run : <input type="button" id="btn" value="XML" onclick="txt2xml()">
+<input type="checkbox" id="hpc">hpc; <a href="" target="_new" id="www">See result</a><br>
+First file lines:<input id=firstLines value="s=f.ReadLine();" size="100"><br>
+test new Node start:<input id=testNodeCaption value="(s.indexOf('#region')>-1)" size="100"><br>
+Node.caption|id|dt|ico|level:<input id=NodeCaption value="node.caption=s;node.level=1;s=f.ReadLine();" size="100"><br>
+id from:<input id=idStart value="1" size="4"> Short&lt<input id=shortLine value="1" size="3">
+ toWrap&gt<input id=wrapLine value="80" size="3"> WrapMin=<input id=wrapMin value="50" size="3"><br>
+Test : <input type="button" id=btn0 value="Test" onclick="Test()">
+Text2Line : <input type="button" id=btn1 value="Text2Line" onclick="Text2Line(ta.value)">
+Text for test:<br>
+<textarea cols="90" rows="15" id="ta"></textarea><br>
+Test result:<br>
+<textarea cols="90" rows="10" id="taTest"></textarea>
+</body>
+</html>
+
+
+
